@@ -2,6 +2,18 @@ import numpy as np
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
+from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
+
+import warnings
+from sklearn.exceptions import ConvergenceWarning
+warnings.simplefilter("always", ConvergenceWarning)
+
+from sklearn.preprocessing import StandardScaler  #not required but useful, we can think about this
+
+from sklearn.model_selection import StratifiedKFold
+
+
+
 
 def unpickle(file):
     import pickle
@@ -34,6 +46,62 @@ def plot_image(image, title=""):
     plt.show()
 
 # as a verification that everything is working correctly, plot an image
-image_nr = 320
-plot_image(X_train[image_nr,:],label_names[y_train[image_nr]])
+#image_nr = 320
+#plot_image(X_train[image_nr,:],label_names[y_train[image_nr]])
+
+#the next 4 lines are to work with a smaller dataset since my (Lorenzo) pc is not so quick with these computations
+X_train = X_train[:5000]
+y_train = y_train[:5000]
+X_test = X_test[:1000]
+y_test = y_test[:1000]
+
+
+#da inserire o meno, si può valutare --> ho notato che mettendola ho (non del tutto, anzi) risolto il problema delle iterazioni nulle nella cross-validation
+
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test= scaler.transform(X_test)
+
+
+
+model = LogisticRegression(max_iter=1000, C=1000, verbose=1) #in scikit-learn the regularization parameter is set as the inverse of the lambda we use normally;
+#note that we can set the parameter multiclass='ovr' or multiclass='multinomial', which distinguished between a one vs the rest model and a truly multinomial one.
+#here it's set to auto, but since the accuracy of the model is low i tried to set multinomial: no signficant improvements noted
+model.fit(X_train, y_train)
+
+y_pred = model.predict(X_test)
+
+#plot_image(X_test_small[250,:], label_names[y_pred[250]])
+
+print("accuracy: {}".format(sum(y_pred==y_test)/len(y_test))) #quick assessment of the quality of the predictions
+
+print("Number of iterations: {}".format(model.n_iter_))#it's useful to check the number of iterations
+
+cv_model = LogisticRegressionCV(max_iter=1000, verbose=1, Cs=[1e-1, 1, 10, 100, 1000], cv=4, n_jobs=-1) #considering values of C < 1e-4 bring the optimization to not converge
+cv_model.fit(X_train, y_train)
+y_pred_cv = cv_model.predict(X_test)
+
+print("CV accuracy: {}".format(sum(y_pred_cv==y_test)/len(y_test)))
+
+
+print("Number of iterations, cv: {}".format(cv_model.n_iter_))
+#n_iter è di dimensione n_fold x n_Cs
+#anche con lo scaling continuo ad avere 0 (che non hanno senso) per valori di C grandi (ossia regolarizzazione limitata)
+#per giunta questo problema compare solo con la cv: per lo stesso valore di C la regressione logistica normale va (ha un certo numero di iterazioni)
+
+cv = StratifiedKFold(n_splits=4)
+
+for i, (_, val_idx) in enumerate(cv.split(X_train, y_train)):
+    print(f"Fold {i}: classi presenti = {np.unique(y_train[val_idx])}")
+
+"""y_pred = model.predict(X_test_small)
+
+model = LogisticRegression(max_iter=1000)
+model.fit(X_train, y_train)
+
+y_pred = model.predict(X_test)
+
+print(y_pred)"""
+
+
 
