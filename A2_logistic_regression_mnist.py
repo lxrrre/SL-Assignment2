@@ -10,12 +10,14 @@ Created on Mon Sep 20 12:21:05 2021
 
 import numpy as np
 import pandas as pd
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
 
 #read the csv file
 
-df = pd.read_csv(r'mnist.csv')
+df = pd.read_csv(r'data/mnist.csv')
 # Alternatively you can put the file in your working directory
 # If you load the csv file with another function make sure that the matrix of features X is defined as in the book
 # and the assignment and convert it to an numpy array

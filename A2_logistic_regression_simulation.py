@@ -9,6 +9,8 @@ Created on Mon Sep 20 12:11:28 2021
 #import packages
 
 import numpy as np
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
  

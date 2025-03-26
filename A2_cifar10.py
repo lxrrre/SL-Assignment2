@@ -1,5 +1,7 @@
-import numpy as np 
-import matplotlib.pyplot
+import numpy as np
+import matplotlib
+matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
 
 def unpickle(file):
     import pickle
