@@ -11,13 +11,13 @@ Created on Mon Sep 20 12:21:05 2021
 import numpy as np
 import pandas as pd
 import matplotlib
-matplotlib.use('TkAgg')
+#matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
 
 #read the csv file
 
-df = pd.read_csv(r'data/mnist.csv')
+df = pd.read_csv(r'/Users/federicamusazzi/Desktop/UNIVERSITA/MAGISTRALE/Assignment2/mnist.csv')
 # Alternatively you can put the file in your working directory
 # If you load the csv file with another function make sure that the matrix of features X is defined as in the book
 # and the assignment and convert it to an numpy array
@@ -117,21 +117,41 @@ def logistic_regression_NR(features, target, num_steps, tolerance):
             break
     return beta
 
-beta=logistic_regression_NR(x_train, y_train, 1000, 1e-3)
-y_hat=logistic_forecast(x_test,beta)
-prediction_accuracy(y_test,y_hat)
+#beta=logistic_regression_NR(x_train, y_train, 1000, 1e-3)
+#y_hat=logistic_forecast(x_test,beta)
+#prediction_accuracy(y_test,y_hat)
 
 # Regularization parameter
 lambda_0=1
 
 
-def logistic_regression_NR_penalized(features, target, num_steps, tolerance):
+def logistic_regression_NR_penalized(features, target, num_steps, tolerance, l):
     beta = np.zeros(features.shape[1])
-    
-    
-           
-          
+    for step in range(num_steps):
+        # compute the weights matrix using the current beta
+        p = logistic(features @ beta)
+        W = np.diag(p * (1 - p))
+        # computing the gradient of regularized log-likelihood: X.T (y-p)+2*lambda*beta
+        gradient = -features.T @ (target - p)+2*l*beta
+        if np.linalg.norm(gradient) > tolerance:
+            # compute hessian -X.T W X +2*lambda*I
+            Hessian = features.T @ W @ features+2*l*np.eye(features.shape[1])
+            # Update beta according to Newton-Raphson procedure
+            beta = beta - np.linalg.solve(Hessian, gradient)
+        else:
+            break
     return beta
 
 
+beta=logistic_regression_NR_penalized(x_train, y_train, 1000, 1e-3, lambda_0)
+y_hat=logistic_forecast(x_test,beta)
+print(prediction_accuracy(y_test,y_hat))
 
+# Plot test images with original and predicted labels
+plt.figure(figsize=(15, 5))
+for index, (image, true_label, pred_label) in enumerate(zip(x_test[:10], y_test[:10], y_hat[:10])):
+    plt.subplot(2, 5, index + 1)
+    plt.imshow(np.reshape(image, (28, 28)), cmap=plt.cm.gray)
+    plt.title(f"True: {true_label}\nPred: {pred_label}", fontsize=12)
+    plt.axis("off")
+plt.show()
