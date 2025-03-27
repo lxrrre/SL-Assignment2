@@ -19,7 +19,7 @@ n = 1000
 
 
 # we simulate two types of features
-np.random.seed(0) # imposing seed for reproducibility
+np.random.seed(1) # imposing seed for reproducibility
 half_sample=int(n/2)
 x1 = np.random.multivariate_normal([-0.5, 1], [[1, 0.7],[0.7, 1]], half_sample)
 x2 = np.random.multivariate_normal([2, -1], [[1, 0.7],[0.7, 1]], half_sample)
@@ -80,7 +80,7 @@ def logistic_regression_NR(features, target, num_steps, tolerance):
             break
     return beta
 
-beta=logistic_regression_NR(simulated_features, simulated_labels,1000, 1e-5)
+beta=logistic_regression_NR(simulated_features, simulated_labels,1000, 1e-10)
 print(beta)
 
 ## Simulation study
@@ -90,7 +90,7 @@ for i in range(S):
     #generate labels y for every simulation
     simulated_labels = logistic_simulation(simulated_features, beta_star)
     #compute the MLE for every simulation
-    mle_list[i,:]=logistic_regression_NR(simulated_features, simulated_labels, 1000, 1e-3)
+    mle_list[i,:]=logistic_regression_NR(simulated_features, simulated_labels, 1000, 1e-10)
 
 #compute the means of estimated parameters beta_1 and beta_2
 beta_mean=np.mean(mle_list, axis=0)
@@ -172,7 +172,7 @@ def logistic_regression_NR_beta_seq(features, target, num_steps, tolerance):
             break
     return np.array(beta_seq)
 
-beta_seq=logistic_regression_NR_beta_seq(simulated_features, simulated_labels, 1000, 1e-5)
+beta_seq=logistic_regression_NR_beta_seq(simulated_features, simulated_labels, 1000, 1e-10)
 
 beta_1_vals = np.linspace(-0.05, 0.3, 100)
 beta_2_vals = np.linspace(-1, 0.1, 100)
@@ -188,7 +188,7 @@ plt.colorbar(label='Log-Likelihood')
 # Overlay the Newton-Raphson sequence
 beta_sequence = beta_seq[:, 0], beta_seq[:, 1]
 plt.plot(beta_sequence[0], beta_sequence[1], marker='.', color='red', label='Newton-Raphson Path')
-plt.plot(beta_star[0], beta_star[1], marker='*', color='blue', label='True minimum')
+plt.plot(beta_star[0], beta_star[1], marker='*', color='blue', label='beta*')
 plt.legend()
 plt.show()
 
