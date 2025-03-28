@@ -3,7 +3,7 @@
 """
 Created on Mon Sep 20 12:11:28 2021
 
-@author: Your names and student numbers
+@author: Bracci Lorenzo - Musazzi Federica - Schiavi Francesco
 """
 
 #import packages
@@ -20,6 +20,7 @@ n = 1000
 
 # we simulate two types of features
 np.random.seed(1) # imposing seed for reproducibility
+
 half_sample=int(n/2)
 x1 = np.random.multivariate_normal([-0.5, 1], [[1, 0.7],[0.7, 1]], half_sample)
 x2 = np.random.multivariate_normal([2, -1], [[1, 0.7],[0.7, 1]], half_sample)
@@ -67,8 +68,8 @@ def logistic_regression_NR(features, target, num_steps, tolerance):
 
     for step in range(num_steps):
         # compute the weights matrix using the current beta
-        p=logistic(np.dot(features, beta))
-        W = np.diag(p*(1-p))
+        p=logistic(np.dot(features, beta)) # probabilities
+        W = np.diag(p*(1-p)) # weight matrix
         # computing the gradient of log-likelihood: X.T (y-p)
         gradient = features.T @ (target - p)
         if np.linalg.norm(gradient) > tolerance :
@@ -80,78 +81,54 @@ def logistic_regression_NR(features, target, num_steps, tolerance):
             break
     return beta
 
+# computing beta estimate
 beta=logistic_regression_NR(simulated_features, simulated_labels,1000, 1e-10)
-print(beta)
+print(beta) # [ 0.16787627 -0.82899279]
+print(np.linalg.norm(beta-beta_star)) # 0.043272577648446775
 
+# MONTECARLO SIMULATION
 ## Simulation study
-S=100
-mle_list=np.zeros((S,2))
-for i in range(S):
-    #generate labels y for every simulation
-    simulated_labels = logistic_simulation(simulated_features, beta_star)
-    #compute the MLE for every simulation
-    mle_list[i,:]=logistic_regression_NR(simulated_features, simulated_labels, 1000, 1e-10)
+for n in {100, 1000}:
+    # n denotes the sample size
+    # we simulate two types of features
+    np.random.seed(1) # imposing seed for reproducibility
+    half_sample=int(n/2)
+    x1 = np.random.multivariate_normal([-0.5, 1], [[1, 0.7],[0.7, 1]], half_sample)
+    x2 = np.random.multivariate_normal([2, -1], [[1, 0.7],[0.7, 1]], half_sample)
+    simulated_features = np.vstack((x1, x2)).astype(np.float64)
 
-#compute the means of estimated parameters beta_1 and beta_2
-beta_mean=np.mean(mle_list, axis=0)
-print(beta_mean)
-#make a histogram for the MLE of beta_1 and beta_2
-plt.hist(mle_list, bins=100)
-plt.show()
+    S=1000
+    mle_list=np.zeros((S,2))
+    for i in range(S):
+        #generate labels y for every simulation
+        simulated_labels = logistic_simulation(simulated_features, beta_star)
+        #compute the MLE for every simulation
+        mle_list[i,:]=logistic_regression_NR(simulated_features, simulated_labels, 1000, 1e-10)
 
+    #compute the means of estimated parameters beta_1 and beta_2
+    beta_mean=np.mean(mle_list, axis=0)
+    print(beta_mean)
+    print(np.linalg.norm(beta_mean-beta_star))
+    #make a histogram for the MLE of beta_1 and beta_2
+    plt.hist(mle_list, bins=100)
+    plt.title( n)
+    plt.show()
+# n=1000
+# beta=[ 0.19882683 -0.80498953]
+# norm_diff=0.005125595266666119
+# n=100
+# beta=[ 0.19726609 -0.82673037]
+# norm_diff=0.026869819196556278
 
+# The following code is to plot the log likelihood as a function of beta components
+# and to show the sequence of NR iterations until convergence for a single label simulation
 
-
-
-
-
-# Graph experiments
-plt.figure(figsize=(12,8))
-p_pred = logistic(simulated_features @ beta)
-plt.hist(p_pred[simulated_labels == 0], bins=30, alpha=0.5, label="Class 0")
-plt.hist(p_pred[simulated_labels == 1], bins=30, alpha=0.5, label="Class 1")
-plt.xlabel("predicted probability")
-plt.ylabel("frequences")
-plt.legend()
-plt.show()
-
-plt.figure(figsize=(12,8))
-plt.scatter(simulated_features[:, 0], simulated_features[:, 1], c=simulated_labels, alpha=0.5, label="Dati")
-
-# Decision boundary
-x_vals = np.linspace(np.min(simulated_features[:, 0]), np.max(simulated_features[:, 0]), 100)
-y_vals = - (beta[0] / beta[1]) * x_vals
-
-plt.plot(x_vals, y_vals, 'r-', label="Decision boundary")
-plt.legend()
-plt.show()
-
-# confusion matrix
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
-
-# predicted probabilities
-p_pred = logistic(simulated_features @ beta)
-
-# predicted classes
-def logistic_forecast(features,beta):
-    signal_hat = np.dot(features, beta)
-    y_hat=np.sign(signal_hat)
-    y_hat[y_hat<0] = 0
-    return y_hat
-
-y_pred = logistic_forecast(simulated_features, beta)
-
-cm = confusion_matrix(simulated_labels, y_pred)
-
-disp = ConfusionMatrixDisplay(confusion_matrix=cm)
-disp.plot(cmap='Blues', values_format='d')
-plt.title("Confusion Matrix")
-plt.show()
-
+# log-likelihood as function of features, labels and beta
 def log_likelihood(features, target, beta):
     p = logistic(features @ beta)
     return np.sum(target * np.log(p) + (1 - target) * np.log(1 - p))
 
+# logistic regression saving NR steps
 def logistic_regression_NR_beta_seq(features, target, num_steps, tolerance):
     #initialization of beta
     beta = np.zeros(features.shape[1])
@@ -172,15 +149,17 @@ def logistic_regression_NR_beta_seq(features, target, num_steps, tolerance):
             break
     return np.array(beta_seq)
 
+# sequence of beta
 beta_seq=logistic_regression_NR_beta_seq(simulated_features, simulated_labels, 1000, 1e-10)
 
+# grid of points for log-likelihood plot
 beta_1_vals = np.linspace(-0.05, 0.3, 100)
 beta_2_vals = np.linspace(-1, 0.1, 100)
 B1, B2 = np.meshgrid(beta_1_vals, beta_2_vals)
 Z = np.array([log_likelihood(simulated_features, simulated_labels, np.array([b1, b2]), ) for b1, b2 in zip(np.ravel(B1), np.ravel(B2))])
 Z = Z.reshape(B1.shape)
 
-# Plot the contour plot
+# Contour plot of log-likelihood as a function of beta
 plt.figure(figsize=(8, 6))
 plt.contourf(B1, B2, Z, levels=50, cmap='viridis')
 plt.colorbar(label='Log-Likelihood')
@@ -193,5 +172,5 @@ plt.legend()
 plt.show()
 
 # We observe that the optimal value found through NR method is the actual minimum of the log likelihood if we consider the simulated data
-# The value beta* is the value we want to retrieve, the minimum of log likelihood with no noisy data.
-# What happens is that by using a Montecarlo approach this noise is reduced and the mean of simulated values approaches the value beta*
+# The value beta* is the value we want to retrieve, the minimum of log likelihood for n->inf.
+# What happens is that by using a Montecarlo approach this noise is reduced and the mean of MLE values approaches the value beta*
