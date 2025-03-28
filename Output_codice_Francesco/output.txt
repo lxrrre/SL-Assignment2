@@ -1,0 +1,19 @@
+Training models in parallel for different C values:  [1.e-11 1.e-10 1.e-09 1.e-08 1.e-07 1.e-06 1.e-05 1.e-04 1.e-03]
+C=1.0e-09: Converged in [1] iterations
+C=1.0e-10: Converged in [1] iterations
+C=1.0e-11: Converged in [1] iterations
+C=1.0e-08: Converged in [2] iterations
+C=1.0e-07: Converged in [10] iterations
+C=1.0e-06: Converged in [16] iterations
+C=1.0e-05: Converged in [65] iterations
+C=1.0e-03: Converged in [88] iterations
+C=1.0e-04: Converged in [96] iterations
+
+Cross-validating accuracy
+
+Cross-validating log loss
+
+Training Accuracy: 45.49%
+Training Log Loss: 1.6225
+Test Accuracy: 41.69%
+Test Log Loss: 1.7044

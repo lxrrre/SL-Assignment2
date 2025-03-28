@@ -1,3 +1,5 @@
+# %%
+
 import numpy as np
 import matplotlib
 matplotlib.use('TkAgg')
@@ -6,11 +8,13 @@ from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
 
 import warnings
 from sklearn.exceptions import ConvergenceWarning
-warnings.simplefilter("always", ConvergenceWarning)
+warnings.simplefilter("always", ConvergenceWarning) #to understand better the convergence
 
 from sklearn.preprocessing import StandardScaler  #not required but useful, we can think about this
 
 from sklearn.model_selection import StratifiedKFold
+
+import pandas as pd
 
 
 
@@ -50,23 +54,23 @@ def plot_image(image, title=""):
 #plot_image(X_train[image_nr,:],label_names[y_train[image_nr]])
 
 #the next 4 lines are to work with a smaller dataset since my (Lorenzo) pc is not so quick with these computations
-X_train = X_train[:5000]
-y_train = y_train[:5000]
-X_test = X_test[:1000]
-y_test = y_test[:1000]
+X_train = X_train[:8000]
+y_train = y_train[:8000]
+X_test = X_test[:2000]
+y_test = y_test[:2000]
 
 
-#da inserire o meno, si può valutare --> ho notato che mettendola ho (non del tutto, anzi) risolto il problema delle iterazioni nulle nella cross-validation
+#da inserire o meno, si può valutare --> ho notato che mettendola migliora il problema delle iterazioni nulle nella cross-validation:
+#potrebbe esulare da quanto richiesto nell'assignment
 
 scaler = StandardScaler()
 X_train = scaler.fit_transform(X_train)
 X_test= scaler.transform(X_test)
 
 
-
-model = LogisticRegression(max_iter=1000, C=1000, verbose=1) #in scikit-learn the regularization parameter is set as the inverse of the lambda we use normally;
-#note that we can set the parameter multiclass='ovr' or multiclass='multinomial', which distinguished between a one vs the rest model and a truly multinomial one.
-#here it's set to auto, but since the accuracy of the model is low i tried to set multinomial: no signficant improvements noted
+# %%
+model = LogisticRegression(max_iter=2000, C=1e-2, verbose=1, solver='saga', multi_class='multinomial') #in scikit-learn the regularization parameter is set as the inverse of the lambda we use normally;
+#saga is the minimization algorithm more adapt for large datasets, such as this one (a lot features and samples)
 model.fit(X_train, y_train)
 
 y_pred = model.predict(X_test)
@@ -77,7 +81,9 @@ print("accuracy: {}".format(sum(y_pred==y_test)/len(y_test))) #quick assessment 
 
 print("Number of iterations: {}".format(model.n_iter_))#it's useful to check the number of iterations
 
-cv_model = LogisticRegressionCV(max_iter=1000, verbose=1, Cs=[1e-1, 1, 10, 100, 1000], cv=4, n_jobs=-1) #considering values of C < 1e-4 bring the optimization to not converge
+
+# %%
+cv_model = LogisticRegressionCV(max_iter=2000, verbose=1, Cs = np.linspace(1e-4, 1e-3, 10), cv=4, n_jobs=-1, solver='saga', multi_class='multinomial') #considering high values of C bring the optimization to not converge --> strong regularization required
 cv_model.fit(X_train, y_train)
 y_pred_cv = cv_model.predict(X_test)
 
@@ -89,19 +95,40 @@ print("Number of iterations, cv: {}".format(cv_model.n_iter_))
 #anche con lo scaling continuo ad avere 0 (che non hanno senso) per valori di C grandi (ossia regolarizzazione limitata)
 #per giunta questo problema compare solo con la cv: per lo stesso valore di C la regressione logistica normale va (ha un certo numero di iterazioni)
 
+print("Best value of C established: {}".format(cv_model.C_[0]))
+
+"""
 cv = StratifiedKFold(n_splits=4)
 
 for i, (_, val_idx) in enumerate(cv.split(X_train, y_train)):
     print(f"Fold {i}: classi presenti = {np.unique(y_train[val_idx])}")
 
-"""y_pred = model.predict(X_test_small)
+#questo for serve per assicurarsi che n_iter=0 NON dipenda dai fold, ma soltanto da alcuni valori di C
 
-model = LogisticRegression(max_iter=1000)
-model.fit(X_train, y_train)
+"""
 
-y_pred = model.predict(X_test)
 
-print(y_pred)"""
+# %%
+
+mean_scores = np.mean(cv_model.scores_[np.unique(y_train)[0]], axis=0) # Average accuracy on the 4 folds for each C value #np.unique(y_train) takes all diverse values of y_train and generates an np-array
+#since the score of the model doesn't depend on the class for multiclass='multinomial', we just take the first)
+C_values = cv_model.Cs_
+
+plt.figure(figsize=(8, 5))
+plt.plot(C_values, mean_scores, marker='o')
+plt.xscale('log')
+plt.yscale('log')
+plt.xlabel('Regularization parameter C (log scale)')
+plt.ylabel('Cross-validated accuracy (log scale)')
+plt.title('Log-log plot of CV accuracy vs. C')
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+
+
+
+
 
 
 
