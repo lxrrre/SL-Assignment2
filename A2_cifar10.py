@@ -197,4 +197,16 @@ print("Number of iterations: {}".format(final_model.n_iter_))
 from sklearn.metrics import accuracy_score, log_loss
 
 
-train_accuracy = accuracy_score(y_train
+train_accuracy = accuracy_score(y_train, final_model.predict(X_train))
+test_accuracy = accuracy_score(y_test, final_model.predict(X_test))
+
+ì
+train_log_loss = log_loss(y_train, final_model.predict_proba(X_train))
+test_log_loss = log_loss(y_test, final_model.predict_proba(X_test))
+
+print(f"Train Accuracy: {train_accuracy:.4f}")
+print(f"Test Accuracy: {test_accuracy:.4f}")
+print(f"Train Log-Loss: {train_log_loss:.4f}")
+print(f"Test Log-Loss: {test_log_loss:.4f}")
+
+
