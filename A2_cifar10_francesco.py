@@ -17,8 +17,8 @@ class A2_cifar10:
         self.scaler = StandardScaler()
         self.folds= 4
         self.subset_frac = 0.2  # Portion of the full dataset to use
-        self.C_values = np.logspace(-10, -2, 9)
-        #self.C_values = np.linspace(3e-4, 1.5e-3, 10)  
+        self.C_values = np.logspace(-10, -2, 9)    #first try
+        #self.C_values = np.linspace(3e-4, 1.5e-3, 10)  #second try after knowing the results of the first
 
     def unpickle(self, file):
         """Load CIFAR-10 data from pickle file"""
