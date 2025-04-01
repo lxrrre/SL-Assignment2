@@ -1,65 +1,49 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-Created on Mon Sep 20 12:21:05 2021
-
 @author:  Bracci Lorenzo - Federica Musazzi - Schiavi Francesco
 """
 
 #import packages
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
 
 #read the csv file
-
-df = pd.read_csv(r'/Users/federicamusazzi/Desktop/UNIVERSITA/MAGISTRALE/Assignment2/mnist.csv')
-# Alternatively you can put the file in your working directory
-# If you load the csv file with another function make sure that the matrix of features X is defined as in the book
-# and the assignment and convert it to an numpy array
-
-
+#the must be in the same directory of the script
+df = pd.read_csv('mnist.csv')
 
 #make dataframe into numpy array
 df.to_numpy()
 y_labels_data=df['label'].to_numpy()
 df_xdata=df.drop(columns='label')
 x_features_data=df_xdata.to_numpy()
-print(x_features_data.shape)
-
+print("\nShape of the feature data (samples, pixels):", x_features_data.shape)
 
 # we will only use the zeros and ones in this empirical study
+# so we filter only zeros and ones
 y_labels_01 = y_labels_data[np.where(y_labels_data <=1)[0]]
 x_features_01 = x_features_data[np.where(y_labels_data <=1)[0]]
-
-
+print(f"Number of 0/1 samples: {len(y_labels_01)}")
 
 # create training set
 n_train=100
 y_train=y_labels_01 [0:n_train]
 x_train=x_features_01[0:n_train]
-
+print(f"\nTraining set size: {n_train} samples")
 
 #create test set
 n_total=y_labels_01.size
 y_test=y_labels_01 [n_train:n_total]
 x_test=x_features_01[n_train:n_total]
-
-
- 
-
-
- 
+print(f"Test set size: {n_total - n_train} samples")
 
 ## Here we plot some handwritten digits
-
 plt.figure(figsize=(25,5))
 for index, (image, label) in enumerate(zip(x_train[5:10], y_train[5:10])):
     plt.subplot(1, 5, index + 1)
     plt.imshow(np.reshape(image, (28,28)), cmap=plt.cm.gray)
     plt.title('Label: %i\n' % label, fontsize = 20)
+    
 plt.show()
 
 #The logistic function
@@ -89,11 +73,11 @@ def prediction_accuracy(y_predicted,y_observed):
 
 #dimension of the problem
 p=x_train.shape[1]
-print(p)
+print(f"\nNumber of features (pixels per image): {p}")
 
 #Compute the ranks of the matrices X and X^T
-print(np.linalg.matrix_rank(x_train))
-print(np.linalg.matrix_rank(x_train.T))
+print("Rank of X_train matrix:", np.linalg.matrix_rank(x_train))
+print("Rank of X_train transposed:", np.linalg.matrix_rank(x_train.T))
 # we see that the rank of the matrix X and X^T is 100 (that is the number of samoles)
  
 def logistic_regression_NR(features, target, num_steps, tolerance):
@@ -141,21 +125,24 @@ def logistic_regression_NR_penalized(features, target, num_steps, tolerance, l):
     return beta
 
 # Estimator for beta
+print("\nTraining model with Newton-Raphson (regularized)...")
 beta=logistic_regression_NR_penalized(x_train, y_train, 1000, 1e-5, lambda_0)
+print("Model training completed.")
 
-# Predictions for labels
+# Predictions for labels    # prediction accuracy (99.48%)
 y_hat=logistic_forecast(x_test,beta)
-# prediction accuracy (99.48%)
-print(prediction_accuracy(y_test,y_hat))
+acc = prediction_accuracy(y_test,y_hat)
+print(f"\nPrediction Accuracy: {acc*100:.2f}%")
 
 # Plotting a confusion matrix that visually shows misclassifications
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 cm = confusion_matrix(y_test, y_hat)
-
 disp = ConfusionMatrixDisplay(confusion_matrix=cm)
 disp.plot(cmap='Blues', values_format='d')
-plt.title("Confusion Matrix")
+disp.ax_.set_xlabel('Predicted Label', fontsize=12)  
+disp.ax_.set_ylabel('True Label', fontsize=12)     
+plt.title("Confusion Matrix", fontsize=15)
 plt.show()
 
 # Plotting probability bars for 20 pictures in the dataset.
@@ -168,15 +155,15 @@ probabilities = logistic(np.dot(x_test, beta))
 
 
 def draw_bars(ax, probabilities, y_hat, label):
-    myplot = ax.bar(range(2), (1-probabilities,probabilities))
+    myplot = ax.bar(range(2), (1-probabilities, probabilities))
     ax.set_ylim([0, 1])
     ax.set_xticks(range(2))
+    ax.set_xticklabels(['0', '1'])                 
+    ax.set_xlabel('Class', fontsize=10)              
+    ax.set_ylabel('Probability', fontsize=10)       
 
     label_predicted = y_hat
-    if label == label_predicted:
-        color = "green"
-    else:
-        color = "red"
+    color = "green" if label == label_predicted else "red"
     myplot[int(y_hat)].set_color(color)
 
 
