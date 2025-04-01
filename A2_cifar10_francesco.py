@@ -54,8 +54,13 @@ class A2_cifar10:
         )
         cv_model.fit(X_train_scaled, y_train_small)
         
-        # Plot results
         mean_scores = np.mean(cv_model.scores_[0], axis=0)
+
+        print("\nCross-Validation Results (Accuracy Scoring):")
+        for C, acc in zip(cv_model.Cs_, mean_scores):
+            print(f"C = {C:.2e}: Accuracy = {acc:.4f}")
+
+        # Plot results
         plt.figure(figsize=(10, 7))
         plt.loglog(cv_model.Cs_, mean_scores, marker='o', linestyle='-')  
         plt.xticks(cv_model.Cs_, labels=[f"{c:.2e}" for c in cv_model.Cs_], rotation=90)
@@ -87,6 +92,7 @@ class A2_cifar10:
                 fold_scores.append(log_loss(y_val, proba))
                 
             log_losses.append(np.mean(fold_scores))
+            print(f"C = {C:.2e}: Log Loss = {log_losses[-1]:.4f}")
         
         plt.figure(figsize=(10, 7))
         plt.loglog(self.C_values, log_losses, marker='o', linestyle='-')
