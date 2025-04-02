@@ -1,4 +1,8 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
+Created on Mon Sep 20 12:11:28 2021
+
 @author: Bracci Lorenzo - Musazzi Federica - Schiavi Francesco
 """
 
@@ -45,13 +49,13 @@ simulated_labels = logistic_simulation(simulated_features, beta_star)
 #### Scatter plot of the features and corresponding labels
 plt.figure(figsize=(12,8))
 scatter = plt.scatter(simulated_features[:, 0], simulated_features[:, 1], c=simulated_labels, alpha=0.5)
+
 handles = [
     plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=scatter.cmap(scatter.norm(0)), markersize=10, label='0'),
     plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=scatter.cmap(scatter.norm(1)), markersize=10, label='1')
 ]
+
 plt.legend(handles=handles, title="Labels")
-plt.xlabel('Feature 1', fontsize=12) 
-plt.ylabel('Feature 2', fontsize=12)
 plt.show()
 
 
@@ -79,10 +83,8 @@ def logistic_regression_NR(features, target, num_steps, tolerance):
 
 # computing beta estimate
 beta=logistic_regression_NR(simulated_features, simulated_labels,1000, 1e-10)
-print("\n=== Newton-Raphson Estimation Results ===")
-print(f"Estimated beta coefficients: {beta}")   # [ 0.16787627 -0.82899279]
-print(f"Distance from true beta (beta_star): {np.linalg.norm(beta - beta_star):.6f}\n") # 0.043272577648446775
-
+print(beta) # [ 0.16787627 -0.82899279]
+print(np.linalg.norm(beta-beta_star)) # 0.043272577648446775
 
 # MONTECARLO SIMULATION
 ## Simulation study
@@ -95,29 +97,22 @@ for n in {100, 1000}:
     x2 = np.random.multivariate_normal([2, -1], [[1, 0.7],[0.7, 1]], half_sample)
     simulated_features = np.vstack((x1, x2)).astype(np.float64)
 
-    S = 1000
-    mle_list = np.zeros((S, 2))
+    S=1000
+    mle_list=np.zeros((S,2))
     for i in range(S):
         #generate labels y for every simulation
         simulated_labels = logistic_simulation(simulated_features, beta_star)
         #compute the MLE for every simulation
-        mle_list[i,:] = logistic_regression_NR(simulated_features, simulated_labels, 1000, 1e-10)
+        mle_list[i,:]=logistic_regression_NR(simulated_features, simulated_labels, 1000, 1e-10)
 
     #compute the means of estimated parameters beta_1 and beta_2
-    beta_mean = np.mean(mle_list, axis=0)
-    norm_diff = np.linalg.norm(beta_mean - beta_star)
-    
-    print(f"\nResults after {S} simulations:")
-    print(f"Mean estimated beta: [{beta_mean[0]:.6f}, {beta_mean[1]:.6f}]")
-    print(f"Average distance from true beta: {norm_diff:.6f}")
-
+    beta_mean=np.mean(mle_list, axis=0)
+    print(beta_mean)
+    print(np.linalg.norm(beta_mean-beta_star))
     #make a histogram for the MLE of beta_1 and beta_2
     plt.hist(mle_list, bins=100)
-    plt.title(f'Distribution of Beta Estimates (n={n})', fontsize=12)
-    plt.xlabel('Estimated Beta Value', fontsize=10)  
-    plt.ylabel('Frequency', fontsize=10)  
+    plt.title( n)
     plt.show()
-    
 # n=1000
 # beta=[ 0.19882683 -0.80498953]
 # norm_diff=0.005125595266666119
@@ -167,15 +162,13 @@ Z = Z.reshape(B1.shape)
 # Contour plot of log-likelihood as a function of beta
 plt.figure(figsize=(8, 6))
 plt.contourf(B1, B2, Z, levels=50, cmap='viridis')
-plt.colorbar(label='Log-Likelihood Value', ax=plt.gca())  
-plt.xlabel('Beta 1', fontsize=12) 
-plt.ylabel('Beta 2', fontsize=12)   
+plt.colorbar(label='Log-Likelihood')
 
 # Overlay the Newton-Raphson sequence
 beta_sequence = beta_seq[:, 0], beta_seq[:, 1]
 plt.plot(beta_sequence[0], beta_sequence[1], marker='.', color='red', label='Newton-Raphson Path')
-plt.plot(beta_star[0], beta_star[1], marker='*', color='blue', markersize=10, label='True Beta (β*)')
-plt.legend(fontsize=10)
+plt.plot(beta_star[0], beta_star[1], marker='*', color='blue', label='beta*')
+plt.legend()
 plt.show()
 
 # We observe that the optimal value found through NR method is the actual minimum of the log likelihood if we consider the simulated data
