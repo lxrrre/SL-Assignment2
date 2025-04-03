@@ -161,7 +161,7 @@ if __name__ == "__main__":
     # Compute rank of feature matrix
     rank = np.linalg.matrix_rank(model_c.x_train)
     print(f"\nRank of x_train: {rank} (out of {model_c.x_train.shape[1]} features)")
-    print("This indicates rank deficiency - columns are linearly dependent.")
+    print("In high-dimensional settings (p > n), the matrix X^T W X becomes singular.")
     
     # Attempt training (will fail)
     try:
